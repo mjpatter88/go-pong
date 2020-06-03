@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"time"
-	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -11,30 +10,6 @@ import (
 const width = 256
 const height = 240
 
-func render(surface *sdl.Surface) {
-	pixelFormat := surface.Format
-	bitspp := int32(pixelFormat.BitsPerPixel)
-	bytespp := int32(pixelFormat.BytesPerPixel)
-	color := sdl.MapRGBA(pixelFormat, 0x00, 0xFF, 0x00, 0xFF)
-	rectWidth := 20
-	rectHeight := 20
-	var data [200 * 120]uint32
-	for i := 0; i < rectWidth*rectHeight; i++ {
-		data[i] = color
-	}
-	newSurface, err := sdl.CreateRGBSurfaceWithFormatFrom(
-		unsafe.Pointer(&data),
-		int32(rectWidth),
-		int32(rectHeight),
-		bitspp,
-		bytespp*int32(rectWidth),
-		pixelFormat.Format,
-	)
-	if err != nil {
-		panic(err)
-	}
-	newSurface.Blit(nil, surface, &sdl.Rect{X: 20, Y: 20, W: int32(rectWidth), H: int32(rectHeight)})
-}
 func clearFrame(renderer *sdl.Renderer) {
 	renderer.SetDrawColor(0x00, 0x00, 0x00, 0xFF)
 	renderer.Clear()
@@ -57,6 +32,7 @@ func drawFrame(renderer *sdl.Renderer) {
 
 	rect := sdl.Rect{X: 0, Y: 0, W: int32(rectWidth), H: int32(rectHeight)}
 
+	// Ignore the pitch for now
 	bytes, _, err := tex.Lock(nil)
 	if err != nil {
 		panic(err)
