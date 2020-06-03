@@ -35,6 +35,45 @@ func render(surface *sdl.Surface) {
 	}
 	newSurface.Blit(nil, surface, &sdl.Rect{X: 20, Y: 20, W: int32(rectWidth), H: int32(rectHeight)})
 }
+func clearFrame(renderer *sdl.Renderer) {
+	renderer.SetDrawColor(0x00, 0x00, 0x00, 0xFF)
+	renderer.Clear()
+}
+
+func drawFrame(renderer *sdl.Renderer) {
+	rectWidth := 20
+	rectHeight := 20
+
+	tex, err := renderer.CreateTexture(
+		uint32(sdl.PIXELFORMAT_RGBA32),
+		sdl.TEXTUREACCESS_STREAMING,
+		int32(rectWidth),
+		int32(rectHeight),
+	)
+	if err != nil {
+		panic(err)
+	}
+	defer tex.Destroy()
+
+	rect := sdl.Rect{X: 0, Y: 0, W: int32(rectWidth), H: int32(rectHeight)}
+
+	bytes, _, err := tex.Lock(nil)
+	if err != nil {
+		panic(err)
+	}
+	for i := 0; i < rectHeight*rectWidth; i++ {
+		bytes[i*4] = 77
+		bytes[i*4+1] = 200
+		bytes[i*4+2] = 233
+		bytes[i*4+3] = 0xFF
+	}
+	tex.Unlock()
+	err = renderer.Copy(tex, nil, &rect)
+	if err != nil {
+		panic(err)
+	}
+	renderer.Present()
+}
 
 func main() {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
@@ -42,10 +81,7 @@ func main() {
 	}
 	defer sdl.Quit()
 
-	window, err := sdl.CreateWindow(
-		"test",
-		sdl.WINDOWPOS_UNDEFINED,
-		sdl.WINDOWPOS_UNDEFINED,
+	window, renderer, err := sdl.CreateWindowAndRenderer(
 		width,
 		height,
 		sdl.WINDOW_SHOWN,
@@ -54,8 +90,8 @@ func main() {
 		panic(err)
 	}
 	defer window.Destroy()
-
-	surface, err := window.GetSurface()
+	defer renderer.Destroy()
+	window.SetTitle("Go Pong")
 	if err != nil {
 		panic(err)
 	}
@@ -80,10 +116,9 @@ func main() {
 	running := true
 	for running {
 		frameStart := time.Now()
-		surface.FillRect(nil, 0)
-		render(surface)
+		clearFrame(renderer)
+		drawFrame(renderer)
 		frameCount++
-		window.UpdateSurface()
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
 			case *sdl.QuitEvent:
