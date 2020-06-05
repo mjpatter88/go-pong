@@ -7,12 +7,11 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const width = 800
-const height = 600
-const rectWidth = 20
-const rectHeight = 20
-const numCols = width / rectWidth
-const numRows = height / rectHeight
+const width = 1100
+const height = 800
+const playerWidth int32 = 20
+const playerHeight int32 = 150
+const wallWidth int32 = 20
 
 type entity struct {
 	Rect    *sdl.Rect
@@ -20,8 +19,25 @@ type entity struct {
 }
 
 func clearFrame(renderer *sdl.Renderer) {
-	renderer.SetDrawColor(0x00, 0x00, 0x00, 0xFF)
+	err := renderer.SetDrawColor(0x00, 0x00, 0x00, 0xFF)
+	if err != nil {
+		panic(err)
+	}
 	renderer.Clear()
+}
+
+func drawWalls(renderer *sdl.Renderer) {
+	err := renderer.SetDrawColor(0xFF, 0xFF, 0xFF, 0xFF)
+	if err != nil {
+		panic(err)
+	}
+	var rects [4]sdl.Rect
+	// Left, Right, Top, Bottom
+	rects[0] = sdl.Rect{X: 10, Y: 10, W: wallWidth, H: height - 20}
+	rects[1] = sdl.Rect{X: width - (wallWidth + 10), Y: 10, W: wallWidth, H: height - 20}
+	rects[2] = sdl.Rect{X: wallWidth + 10, Y: 10, W: width - (2*wallWidth + 2*10), H: 20}
+	rects[3] = sdl.Rect{X: wallWidth + 10, Y: height - 30, W: width - (2*wallWidth + 2*10), H: 20}
+	renderer.FillRects(rects[:])
 }
 
 func drawFrame(renderer *sdl.Renderer, entities []entity) {
@@ -34,26 +50,25 @@ func drawFrame(renderer *sdl.Renderer, entities []entity) {
 	renderer.Present()
 }
 
-func createBlock(renderer *sdl.Renderer, x int, y int, w int, h int, r uint8, g uint8, b uint8) entity {
-
+func createPlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32, r uint8, g uint8, b uint8) entity {
 	tex, err := renderer.CreateTexture(
 		uint32(sdl.PIXELFORMAT_RGBA32),
 		sdl.TEXTUREACCESS_STREAMING,
-		int32(w),
-		int32(h),
+		w,
+		h,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	rect := sdl.Rect{X: int32(x), Y: int32(y), W: int32(w), H: int32(h)}
+	rect := sdl.Rect{X: x, Y: y, W: w, H: h}
 
 	// Ignore the pitch for now
 	bytes, _, err := tex.Lock(nil)
 	if err != nil {
 		panic(err)
 	}
-	for i := 0; i < w*h; i++ {
+	for i := 0; i < int(w*h); i++ {
 		bytes[i*4] = r
 		bytes[i*4+1] = g
 		bytes[i*4+2] = b
@@ -64,26 +79,14 @@ func createBlock(renderer *sdl.Renderer, x int, y int, w int, h int, r uint8, g 
 }
 
 func createEntites(renderer *sdl.Renderer) []entity {
-	var entities [numRows * numCols]entity
+	var entities [2]entity
+	playerOffset := 10 + wallWidth + 20
+	playerY := (height / 2) - (playerHeight / 2)
 
-	for row := 0; row < numRows; row++ {
-		y := rectHeight * row
-		for col := 0; col < numCols; col++ {
-			x := rectWidth * col
-			var r, g, b uint8
-			if (row+col)%2 == 0 {
-				r = 77
-				g = 200
-				b = 233
-			} else {
-				r = 65
-				g = 132
-				b = 164
-			}
-			block := createBlock(renderer, x, y, rectWidth, rectHeight, r, g, b)
-			entities[row*numCols+col] = block
-		}
-	}
+	player1 := createPlayer(renderer, playerOffset, playerY, playerWidth, playerHeight, 0xFF, 0xFF, 0xFF)
+	player2 := createPlayer(renderer, width-(playerOffset+playerWidth), playerY, playerWidth, playerHeight, 0xFF, 0xFF, 0xFF)
+	entities[0] = player1
+	entities[1] = player2
 
 	return entities[:]
 }
@@ -131,12 +134,13 @@ func main() {
 		}
 	}()
 
-	entities := createEntites(renderer)
-
 	running := true
 	for running {
 		frameStart := time.Now()
+		entities := createEntites(renderer)
+
 		clearFrame(renderer)
+		drawWalls(renderer)
 		drawFrame(renderer, entities)
 		frameCount++
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
