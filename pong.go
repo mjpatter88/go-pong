@@ -13,6 +13,12 @@ const playerWidth int32 = 20
 const playerHeight int32 = 150
 const wallWidth int32 = 20
 
+type gameObjects struct {
+	Player1 *entity
+	Player2 *entity
+	Ball    *entity
+}
+
 type entity struct {
 	Rect    *sdl.Rect
 	Texture *sdl.Texture
@@ -40,12 +46,16 @@ func drawWalls(renderer *sdl.Renderer) {
 	renderer.FillRects(rects[:])
 }
 
-func drawFrame(renderer *sdl.Renderer, entities []entity) {
-	for _, entity := range entities {
-		err := renderer.Copy(entity.Texture, nil, entity.Rect)
-		if err != nil {
-			panic(err)
-		}
+func drawFrame(renderer *sdl.Renderer, objs *gameObjects) {
+	player1 := objs.Player1
+	err := renderer.Copy(player1.Texture, nil, player1.Rect)
+	if err != nil {
+		panic(err)
+	}
+	player2 := objs.Player2
+	err = renderer.Copy(player2.Texture, nil, player2.Rect)
+	if err != nil {
+		panic(err)
 	}
 	renderer.Present()
 }
@@ -78,17 +88,15 @@ func createPlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32, r 
 	return entity{Rect: &rect, Texture: tex}
 }
 
-func createEntites(renderer *sdl.Renderer) []entity {
-	var entities [2]entity
+func createGameObjects(renderer *sdl.Renderer) *gameObjects {
 	playerOffset := 10 + wallWidth + 20
 	playerY := (height / 2) - (playerHeight / 2)
 
 	player1 := createPlayer(renderer, playerOffset, playerY, playerWidth, playerHeight, 0xFF, 0xFF, 0xFF)
 	player2 := createPlayer(renderer, width-(playerOffset+playerWidth), playerY, playerWidth, playerHeight, 0xFF, 0xFF, 0xFF)
-	entities[0] = player1
-	entities[1] = player2
 
-	return entities[:]
+	gameObjects := gameObjects{Player1: &player1, Player2: &player2, Ball: nil}
+	return &gameObjects
 }
 
 func initialize() (*sdl.Window, *sdl.Renderer) {
@@ -109,6 +117,30 @@ func initialize() (*sdl.Window, *sdl.Renderer) {
 		panic(err)
 	}
 	return window, renderer
+}
+
+// TODO: rework this approach make movement nice.
+// Maybe apply acceleration to object velocities rather than updating the position directly?
+// TODO: prevent moving too far up or down
+func handleInput(event *sdl.KeyboardEvent, objs *gameObjects) {
+	switch event.Keysym.Sym {
+	case sdl.K_w:
+		if event.Type == sdl.KEYDOWN {
+			objs.Player1.Rect.Y -= 4
+		}
+	case sdl.K_s:
+		if event.Type == sdl.KEYDOWN {
+			objs.Player1.Rect.Y += 4
+		}
+	case sdl.K_UP:
+		if event.Type == sdl.KEYDOWN {
+			objs.Player2.Rect.Y -= 4
+		}
+	case sdl.K_DOWN:
+		if event.Type == sdl.KEYDOWN {
+			objs.Player2.Rect.Y += 4
+		}
+	}
 }
 
 func main() {
@@ -134,22 +166,24 @@ func main() {
 		}
 	}()
 
+	gameObjects := createGameObjects(renderer)
 	running := true
 	for running {
 		frameStart := time.Now()
-		entities := createEntites(renderer)
 
 		clearFrame(renderer)
 		drawWalls(renderer)
-		drawFrame(renderer, entities)
+		drawFrame(renderer, gameObjects)
 		frameCount++
+
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch event.(type) {
+			switch t := event.(type) {
 			case *sdl.QuitEvent:
 				fmt.Println("Quit")
 				running = false
-				done <- false
-				break
+				done <- true
+			case *sdl.KeyboardEvent:
+				handleInput(t, gameObjects)
 			}
 		}
 		// Render at roughly 60 fps
