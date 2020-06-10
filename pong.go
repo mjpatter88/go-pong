@@ -122,24 +122,18 @@ func initialize() (*sdl.Window, *sdl.Renderer) {
 // TODO: rework this approach make movement nice.
 // Maybe apply acceleration to object velocities rather than updating the position directly?
 // TODO: prevent moving too far up or down
-func handleInput(event *sdl.KeyboardEvent, objs *gameObjects) {
-	switch event.Keysym.Sym {
-	case sdl.K_w:
-		if event.Type == sdl.KEYDOWN {
-			objs.Player1.Rect.Y -= 4
-		}
-	case sdl.K_s:
-		if event.Type == sdl.KEYDOWN {
-			objs.Player1.Rect.Y += 4
-		}
-	case sdl.K_UP:
-		if event.Type == sdl.KEYDOWN {
-			objs.Player2.Rect.Y -= 4
-		}
-	case sdl.K_DOWN:
-		if event.Type == sdl.KEYDOWN {
-			objs.Player2.Rect.Y += 4
-		}
+func handleInput(state []uint8, objs *gameObjects) {
+	if state[sdl.SCANCODE_W] == 1 {
+		objs.Player1.Rect.Y -= 4
+	}
+	if state[sdl.SCANCODE_S] == 1 {
+		objs.Player1.Rect.Y += 4
+	}
+	if state[sdl.SCANCODE_UP] == 1 {
+		objs.Player2.Rect.Y -= 4
+	}
+	if state[sdl.SCANCODE_DOWN] == 1 {
+		objs.Player2.Rect.Y += 4
 	}
 }
 
@@ -171,21 +165,21 @@ func main() {
 	for running {
 		frameStart := time.Now()
 
+
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				fmt.Println("Quit")
+				running = false
+				done <- true
+			}
+		}
+		handleInput(sdl.GetKeyboardState(), gameObjects)
 		clearFrame(renderer)
 		drawWalls(renderer)
 		drawFrame(renderer, gameObjects)
 		frameCount++
 
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch t := event.(type) {
-			case *sdl.QuitEvent:
-				fmt.Println("Quit")
-				running = false
-				done <- true
-			case *sdl.KeyboardEvent:
-				handleInput(t, gameObjects)
-			}
-		}
 		// Render at roughly 60 fps
 		elapsed := time.Since(frameStart).Milliseconds()
 		if elapsed < 16 {
