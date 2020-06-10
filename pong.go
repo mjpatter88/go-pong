@@ -12,6 +12,9 @@ const height = 800
 const playerWidth int32 = 20
 const playerHeight int32 = 150
 const wallWidth int32 = 20
+const maxPlayerVelocity = 15
+const minPlayerY = 10 + wallWidth
+const maxPlayerY = (height - 30) - playerHeight
 
 type gameObjects struct {
 	Player1 *entity
@@ -20,8 +23,10 @@ type gameObjects struct {
 }
 
 type entity struct {
-	Rect    *sdl.Rect
-	Texture *sdl.Texture
+	Rect      *sdl.Rect
+	Texture   *sdl.Texture
+	XVelocity int32
+	YVelocity int32
 }
 
 func clearFrame(renderer *sdl.Renderer) {
@@ -85,7 +90,7 @@ func createPlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32, r 
 		bytes[i*4+3] = 0xFF
 	}
 	tex.Unlock()
-	return entity{Rect: &rect, Texture: tex}
+	return entity{Rect: &rect, Texture: tex, XVelocity: 0, YVelocity: 0}
 }
 
 func createGameObjects(renderer *sdl.Renderer) *gameObjects {
@@ -97,6 +102,38 @@ func createGameObjects(renderer *sdl.Renderer) *gameObjects {
 
 	gameObjects := gameObjects{Player1: &player1, Player2: &player2, Ball: nil}
 	return &gameObjects
+}
+
+func updateObjectsPosition(objs *gameObjects) {
+	player1 := objs.Player1
+	player2 := objs.Player2
+	// Limit the velocities in each Y direction.
+	if player1.YVelocity > maxPlayerVelocity {
+		player1.YVelocity = maxPlayerVelocity
+	} else if player1.YVelocity < -maxPlayerVelocity {
+		player1.YVelocity = -maxPlayerVelocity
+	}
+	if player2.YVelocity > maxPlayerVelocity {
+		player2.YVelocity = maxPlayerVelocity
+	} else if player2.YVelocity < -maxPlayerVelocity {
+		player2.YVelocity = -maxPlayerVelocity
+	}
+
+	newY := player1.Rect.Y + player1.YVelocity
+	if newY > maxPlayerY {
+		newY = maxPlayerY
+	} else if newY < minPlayerY {
+		newY = minPlayerY
+	}
+	player1.Rect.Y = newY
+
+	newY = player2.Rect.Y + player2.YVelocity
+	if newY > maxPlayerY {
+		newY = maxPlayerY
+	} else if newY < minPlayerY {
+		newY = minPlayerY
+	}
+	player2.Rect.Y = newY
 }
 
 func initialize() (*sdl.Window, *sdl.Renderer) {
@@ -124,16 +161,19 @@ func initialize() (*sdl.Window, *sdl.Renderer) {
 // TODO: prevent moving too far up or down
 func handleInput(state []uint8, objs *gameObjects) {
 	if state[sdl.SCANCODE_W] == 1 {
-		objs.Player1.Rect.Y -= 4
+		objs.Player1.YVelocity -= 2
+	} else if state[sdl.SCANCODE_S] == 1 {
+		objs.Player1.YVelocity += 1
+	} else {
+		objs.Player1.YVelocity = 0
 	}
-	if state[sdl.SCANCODE_S] == 1 {
-		objs.Player1.Rect.Y += 4
-	}
+
 	if state[sdl.SCANCODE_UP] == 1 {
-		objs.Player2.Rect.Y -= 4
-	}
-	if state[sdl.SCANCODE_DOWN] == 1 {
-		objs.Player2.Rect.Y += 4
+		objs.Player2.YVelocity -= 4
+	} else if state[sdl.SCANCODE_DOWN] == 1 {
+		objs.Player2.YVelocity += 4
+	} else {
+		objs.Player2.YVelocity = 0
 	}
 }
 
@@ -165,7 +205,6 @@ func main() {
 	for running {
 		frameStart := time.Now()
 
-
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
 			case *sdl.QuitEvent:
@@ -175,6 +214,7 @@ func main() {
 			}
 		}
 		handleInput(sdl.GetKeyboardState(), gameObjects)
+		updateObjectsPosition(gameObjects)
 		clearFrame(renderer)
 		drawWalls(renderer)
 		drawFrame(renderer, gameObjects)
