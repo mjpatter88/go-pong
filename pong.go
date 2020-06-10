@@ -17,16 +17,9 @@ const minPlayerY = 10 + wallWidth
 const maxPlayerY = (height - 30) - playerHeight
 
 type gameObjects struct {
-	Player1 *entity
-	Player2 *entity
-	Ball    *entity
-}
-
-type entity struct {
-	Rect      *sdl.Rect
-	Texture   *sdl.Texture
-	XVelocity int32
-	YVelocity int32
+	Player1 *Player
+	Player2 *Player
+	Ball    *Entity
 }
 
 func clearFrame(renderer *sdl.Renderer) {
@@ -52,53 +45,18 @@ func drawWalls(renderer *sdl.Renderer) {
 }
 
 func drawFrame(renderer *sdl.Renderer, objs *gameObjects) {
-	player1 := objs.Player1
-	err := renderer.Copy(player1.Texture, nil, player1.Rect)
-	if err != nil {
-		panic(err)
-	}
-	player2 := objs.Player2
-	err = renderer.Copy(player2.Texture, nil, player2.Rect)
-	if err != nil {
-		panic(err)
-	}
+	drawWalls(renderer)
+	objs.Player1.draw(renderer)
+	objs.Player2.draw(renderer)
 	renderer.Present()
-}
-
-func createPlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32, r uint8, g uint8, b uint8) entity {
-	tex, err := renderer.CreateTexture(
-		uint32(sdl.PIXELFORMAT_RGBA32),
-		sdl.TEXTUREACCESS_STREAMING,
-		w,
-		h,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	rect := sdl.Rect{X: x, Y: y, W: w, H: h}
-
-	// Ignore the pitch for now
-	bytes, _, err := tex.Lock(nil)
-	if err != nil {
-		panic(err)
-	}
-	for i := 0; i < int(w*h); i++ {
-		bytes[i*4] = r
-		bytes[i*4+1] = g
-		bytes[i*4+2] = b
-		bytes[i*4+3] = 0xFF
-	}
-	tex.Unlock()
-	return entity{Rect: &rect, Texture: tex, XVelocity: 0, YVelocity: 0}
 }
 
 func createGameObjects(renderer *sdl.Renderer) *gameObjects {
 	playerOffset := 10 + wallWidth + 20
 	playerY := (height / 2) - (playerHeight / 2)
 
-	player1 := createPlayer(renderer, playerOffset, playerY, playerWidth, playerHeight, 0xFF, 0xFF, 0xFF)
-	player2 := createPlayer(renderer, width-(playerOffset+playerWidth), playerY, playerWidth, playerHeight, 0xFF, 0xFF, 0xFF)
+	player1 := CreatePlayer(renderer, playerOffset, playerY, playerWidth, playerHeight)
+	player2 := CreatePlayer(renderer, width-(playerOffset+playerWidth), playerY, playerWidth, playerHeight)
 
 	gameObjects := gameObjects{Player1: &player1, Player2: &player2, Ball: nil}
 	return &gameObjects
@@ -213,7 +171,6 @@ func main() {
 		handleInput(sdl.GetKeyboardState(), gameObjects)
 		updateObjectsPosition(gameObjects)
 		clearFrame(renderer)
-		drawWalls(renderer)
 		drawFrame(renderer, gameObjects)
 		frameCount++
 
