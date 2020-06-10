@@ -156,9 +156,6 @@ func initialize() (*sdl.Window, *sdl.Renderer) {
 	return window, renderer
 }
 
-// TODO: rework this approach make movement nice.
-// Maybe apply acceleration to object velocities rather than updating the position directly?
-// TODO: prevent moving too far up or down
 func handleInput(state []uint8, objs *gameObjects) {
 	if state[sdl.SCANCODE_W] == 1 {
 		objs.Player1.YVelocity -= 2
