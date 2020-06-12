@@ -10,16 +10,16 @@ import (
 // Render at roughly 60 fps
 const msPerFrame = 16
 
-const width = 1100
-const height = 800
+const width int32 = 1100
+const height int32 = 800
 const playerWidth int32 = 20
 const playerHeight int32 = 150
-const wallWidth int32 = 20
 
 type gameObjects struct {
 	Player1 *Player
 	Player2 *Player
 	Ball    *Ball
+	Walls   *Walls
 }
 
 func clearFrame(renderer *sdl.Renderer) {
@@ -30,22 +30,8 @@ func clearFrame(renderer *sdl.Renderer) {
 	renderer.Clear()
 }
 
-func drawWalls(renderer *sdl.Renderer) {
-	err := renderer.SetDrawColor(0xFF, 0xFF, 0xFF, 0xFF)
-	if err != nil {
-		panic(err)
-	}
-	var rects [4]sdl.Rect
-	// Left, Right, Top, Bottom
-	rects[0] = sdl.Rect{X: 10, Y: 10, W: wallWidth, H: height - 20}
-	rects[1] = sdl.Rect{X: width - (wallWidth + 10), Y: 10, W: wallWidth, H: height - 20}
-	rects[2] = sdl.Rect{X: wallWidth + 10, Y: 10, W: width - (2*wallWidth + 2*10), H: 20}
-	rects[3] = sdl.Rect{X: wallWidth + 10, Y: height - 30, W: width - (2*wallWidth + 2*10), H: 20}
-	renderer.FillRects(rects[:])
-}
-
 func drawFrame(renderer *sdl.Renderer, objs *gameObjects) {
-	drawWalls(renderer)
+	objs.Walls.draw(renderer)
 	objs.Ball.draw(renderer)
 	objs.Player1.draw(renderer)
 	objs.Player2.draw(renderer)
@@ -56,14 +42,51 @@ func createGameObjects(renderer *sdl.Renderer) *gameObjects {
 	player1 := CreatePlayer1(renderer)
 	player2 := CreatePlayer2(renderer)
 	ball := createBall(renderer)
-	gameObjects := gameObjects{Player1: &player1, Player2: &player2, Ball: &ball}
+	walls := createWalls()
+	gameObjects := gameObjects{Player1: &player1, Player2: &player2, Ball: &ball, Walls: &walls}
 	return &gameObjects
 }
 
-func updateObjectsPosition(objs *gameObjects) {
-	objs.Ball.updatePosition()
-	objs.Player1.updatePosition()
-	objs.Player2.updatePosition()
+func updateOjects(objs *gameObjects) {
+	objs.Ball.update()
+	objs.Player1.update()
+	objs.Player2.update()
+}
+
+//TODO: better place for this?
+func didCollide(first *sdl.Rect, second *sdl.Rect) bool {
+	colliding := true
+	firstTop := first.Y
+	firstBottom := first.Y + first.H
+	firstLeft := first.X
+	firstRight := first.X + first.W
+
+	secondTop := second.Y
+	secondBottom := second.Y + second.H
+	secondLeft := second.X
+	secondRight := second.X + second.W
+
+	if firstBottom < secondTop || firstTop > secondBottom {
+		colliding = false
+	}
+	if firstRight < secondLeft || firstLeft > secondRight {
+		colliding = false
+	}
+
+	return colliding
+}
+
+func handleCollisions(objs *gameObjects) {
+	ballEntity := objs.Ball.Entity
+	player1Entity := objs.Player1.Entity
+	player2Entity := objs.Player2.Entity
+	if didCollide(ballEntity.Rect, player1Entity.Rect) || didCollide(ballEntity.Rect, player2Entity.Rect) {
+		objs.Ball.Xvelocity *= -1
+	}
+	if didCollide(ballEntity.Rect, &objs.Walls.BottomWall) || didCollide(ballEntity.Rect, &objs.Walls.TopWall) {
+		objs.Ball.Yvelocity *= -1
+	}
+	//TODO handle collisions with right and left walls (goals)
 }
 
 func initialize() (*sdl.Window, *sdl.Renderer) {
@@ -141,7 +164,8 @@ func main() {
 			}
 		}
 		handleInput(sdl.GetKeyboardState(), gameObjects)
-		updateObjectsPosition(gameObjects)
+		handleCollisions(gameObjects)
+		updateOjects(gameObjects)
 		clearFrame(renderer)
 		drawFrame(renderer, gameObjects)
 		frameCount++

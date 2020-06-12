@@ -24,7 +24,7 @@ func (p *Player) draw(renderer *sdl.Renderer) {
 	p.Entity.draw(renderer)
 }
 
-func (p *Player) updatePosition() {
+func (p *Player) update() {
 	// Make sure the new position is in the game field
 	newY := p.Rect.Y + p.YVelocity
 	if newY > maxPlayerY {

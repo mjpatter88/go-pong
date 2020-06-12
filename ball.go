@@ -1,6 +1,8 @@
 package main
 
-import "github.com/veandco/go-sdl2/sdl"
+import (
+	"github.com/veandco/go-sdl2/sdl"
+)
 
 const ballWidth = 20
 const ballHeight = 20
@@ -19,10 +21,9 @@ func (b *Ball) draw(renderer *sdl.Renderer) {
 	b.Entity.draw(renderer)
 }
 
-func (b *Ball) updatePosition() {
+func (b *Ball) update() {
 	b.Rect.X += b.Xvelocity
 	b.Rect.Y += b.Yvelocity
-	// TODO handle collisions
 }
 
 func createBall(renderer *sdl.Renderer) Ball {
