@@ -19,7 +19,7 @@ const wallWidth int32 = 20
 type gameObjects struct {
 	Player1 *Player
 	Player2 *Player
-	Ball    *Entity
+	Ball    *Ball
 }
 
 func clearFrame(renderer *sdl.Renderer) {
@@ -46,19 +46,17 @@ func drawWalls(renderer *sdl.Renderer) {
 
 func drawFrame(renderer *sdl.Renderer, objs *gameObjects) {
 	drawWalls(renderer)
+	objs.Ball.draw(renderer)
 	objs.Player1.draw(renderer)
 	objs.Player2.draw(renderer)
 	renderer.Present()
 }
 
 func createGameObjects(renderer *sdl.Renderer) *gameObjects {
-	playerOffset := 10 + wallWidth + 20
-	playerY := (height / 2) - (playerHeight / 2)
-
-	player1 := CreatePlayer(renderer, playerOffset, playerY, playerWidth, playerHeight)
-	player2 := CreatePlayer(renderer, width-(playerOffset+playerWidth), playerY, playerWidth, playerHeight)
-
-	gameObjects := gameObjects{Player1: &player1, Player2: &player2, Ball: nil}
+	player1 := CreatePlayer1(renderer)
+	player2 := CreatePlayer2(renderer)
+	ball := createBall(renderer)
+	gameObjects := gameObjects{Player1: &player1, Player2: &player2, Ball: &ball}
 	return &gameObjects
 }
 

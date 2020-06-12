@@ -12,9 +12,10 @@ const maxPlayerVelocity = 20
 const minPlayerY = 10 + wallWidth
 const maxPlayerY = (height - 30) - playerHeight
 const playerVelocityIncrement = 4
+const playerOffset = 10 + wallWidth + 20
+const playerY = (height / 2) - (playerHeight / 2)
 
 type Player struct {
-	XVelocity int32
 	YVelocity int32
 	Entity
 }
@@ -64,6 +65,18 @@ func (p *Player) stop() {
 	p.YVelocity = 0
 }
 
+func CreatePlayer1(renderer *sdl.Renderer) Player {
+	x := playerOffset
+	y := playerY
+	return CreatePlayer(renderer, x, y, playerWidth, playerHeight)
+}
+
+func CreatePlayer2(renderer *sdl.Renderer) Player {
+	x := width - (playerOffset + playerWidth)
+	y := playerY
+	return CreatePlayer(renderer, x, y, playerWidth, playerHeight)
+}
+
 func CreatePlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32) Player {
 	tex, err := renderer.CreateTexture(
 		uint32(sdl.PIXELFORMAT_RGBA32),
@@ -91,5 +104,5 @@ func CreatePlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32) Pl
 	tex.Unlock()
 
 	ent := Entity{Rect: &rect, Texture: tex}
-	return Player{XVelocity: 0, YVelocity: 0, Entity: ent}
+	return Player{YVelocity: 0, Entity: ent}
 }
