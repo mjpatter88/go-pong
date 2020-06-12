@@ -8,6 +8,11 @@ const r = 0xFF
 const g = 0xFF
 const b = 0xFF
 
+const maxPlayerVelocity = 20
+const minPlayerY = 10 + wallWidth
+const maxPlayerY = (height - 30) - playerHeight
+const playerVelocityIncrement = 4
+
 type Player struct {
 	XVelocity int32
 	YVelocity int32
@@ -19,13 +24,7 @@ func (p *Player) draw(renderer *sdl.Renderer) {
 }
 
 func (p *Player) updatePosition() {
-	// // Limit the velocities in each Y direction.
-	if p.YVelocity > maxPlayerVelocity {
-		p.YVelocity = maxPlayerVelocity
-	} else if p.YVelocity < -maxPlayerVelocity {
-		p.YVelocity = -maxPlayerVelocity
-	}
-
+	// Make sure the new position is in the game field
 	newY := p.Rect.Y + p.YVelocity
 	if newY > maxPlayerY {
 		newY = maxPlayerY
@@ -33,6 +32,36 @@ func (p *Player) updatePosition() {
 		newY = minPlayerY
 	}
 	p.Rect.Y = newY
+}
+
+func (p *Player) accelerateUp() {
+	// First zero out velocity in opposite direction if necessary.
+	if p.YVelocity > 0 {
+		p.YVelocity = 0
+	}
+
+	// Check against max velocity
+	p.YVelocity -= maxPlayerVelocity
+	if p.YVelocity < -maxPlayerVelocity {
+		p.YVelocity = -maxPlayerVelocity
+	}
+}
+
+func (p *Player) accelerateDown() {
+	// First zero out velocity in opposite direction if necessary.
+	if p.YVelocity < 0 {
+		p.YVelocity = 0
+	}
+
+	// Check against max velocity
+	p.YVelocity += maxPlayerVelocity
+	if p.YVelocity > maxPlayerVelocity {
+		p.YVelocity = maxPlayerVelocity
+	}
+}
+
+func (p *Player) stop() {
+	p.YVelocity = 0
 }
 
 func CreatePlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32) Player {

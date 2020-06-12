@@ -7,14 +7,14 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// Render at roughly 60 fps
+const msPerFrame = 16
+
 const width = 1100
 const height = 800
 const playerWidth int32 = 20
 const playerHeight int32 = 150
 const wallWidth int32 = 20
-const maxPlayerVelocity = 15
-const minPlayerY = 10 + wallWidth
-const maxPlayerY = (height - 30) - playerHeight
 
 type gameObjects struct {
 	Player1 *Player
@@ -89,19 +89,19 @@ func initialize() (*sdl.Window, *sdl.Renderer) {
 
 func handleInput(state []uint8, objs *gameObjects) {
 	if state[sdl.SCANCODE_W] == 1 {
-		objs.Player1.YVelocity -= 2
+		objs.Player1.accelerateUp()
 	} else if state[sdl.SCANCODE_S] == 1 {
-		objs.Player1.YVelocity += 1
+		objs.Player1.accelerateDown()
 	} else {
-		objs.Player1.YVelocity = 0
+		objs.Player1.stop()
 	}
 
 	if state[sdl.SCANCODE_UP] == 1 {
-		objs.Player2.YVelocity -= 4
+		objs.Player2.accelerateUp()
 	} else if state[sdl.SCANCODE_DOWN] == 1 {
-		objs.Player2.YVelocity += 4
+		objs.Player2.accelerateDown()
 	} else {
-		objs.Player2.YVelocity = 0
+		objs.Player2.stop()
 	}
 }
 
@@ -147,10 +147,9 @@ func main() {
 		drawFrame(renderer, gameObjects)
 		frameCount++
 
-		// Render at roughly 60 fps
 		elapsed := time.Since(frameStart).Milliseconds()
-		if elapsed < 16 {
-			delay := 16 - elapsed
+		if elapsed < msPerFrame {
+			delay := msPerFrame - elapsed
 			if delay < 0 {
 				fmt.Println(delay)
 				panic(delay)
