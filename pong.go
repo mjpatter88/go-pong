@@ -61,6 +61,7 @@ func createGameObjects(renderer *sdl.Renderer) *gameObjects {
 }
 
 func updateObjectsPosition(objs *gameObjects) {
+	objs.Ball.updatePosition()
 	objs.Player1.updatePosition()
 	objs.Player2.updatePosition()
 }
