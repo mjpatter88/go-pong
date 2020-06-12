@@ -63,35 +63,8 @@ func createGameObjects(renderer *sdl.Renderer) *gameObjects {
 }
 
 func updateObjectsPosition(objs *gameObjects) {
-	player1 := objs.Player1
-	player2 := objs.Player2
-	// Limit the velocities in each Y direction.
-	if player1.YVelocity > maxPlayerVelocity {
-		player1.YVelocity = maxPlayerVelocity
-	} else if player1.YVelocity < -maxPlayerVelocity {
-		player1.YVelocity = -maxPlayerVelocity
-	}
-	if player2.YVelocity > maxPlayerVelocity {
-		player2.YVelocity = maxPlayerVelocity
-	} else if player2.YVelocity < -maxPlayerVelocity {
-		player2.YVelocity = -maxPlayerVelocity
-	}
-
-	newY := player1.Rect.Y + player1.YVelocity
-	if newY > maxPlayerY {
-		newY = maxPlayerY
-	} else if newY < minPlayerY {
-		newY = minPlayerY
-	}
-	player1.Rect.Y = newY
-
-	newY = player2.Rect.Y + player2.YVelocity
-	if newY > maxPlayerY {
-		newY = maxPlayerY
-	} else if newY < minPlayerY {
-		newY = minPlayerY
-	}
-	player2.Rect.Y = newY
+	objs.Player1.updatePosition()
+	objs.Player2.updatePosition()
 }
 
 func initialize() (*sdl.Window, *sdl.Renderer) {

@@ -18,6 +18,23 @@ func (p *Player) draw(renderer *sdl.Renderer) {
 	p.Entity.draw(renderer)
 }
 
+func (p *Player) updatePosition() {
+	// // Limit the velocities in each Y direction.
+	if p.YVelocity > maxPlayerVelocity {
+		p.YVelocity = maxPlayerVelocity
+	} else if p.YVelocity < -maxPlayerVelocity {
+		p.YVelocity = -maxPlayerVelocity
+	}
+
+	newY := p.Rect.Y + p.YVelocity
+	if newY > maxPlayerY {
+		newY = maxPlayerY
+	} else if newY < minPlayerY {
+		newY = minPlayerY
+	}
+	p.Rect.Y = newY
+}
+
 func CreatePlayer(renderer *sdl.Renderer, x int32, y int32, w int32, h int32) Player {
 	tex, err := renderer.CreateTexture(
 		uint32(sdl.PIXELFORMAT_RGBA32),
