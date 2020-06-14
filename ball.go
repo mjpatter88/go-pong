@@ -6,8 +6,8 @@ import (
 
 const ballWidth = 20
 const ballHeight = 20
-const startingX = (width + ballWidth) / 2
-const startingY = (height + ballHeight) / 2
+const startingX = (gameWidth + ballWidth) / 2
+const startingY = (gameHeight + ballHeight) / 2
 const startingVelocityX = 5
 const startingVelocityY = -2
 

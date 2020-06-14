@@ -10,10 +10,16 @@ import (
 // Render at roughly 60 fps
 const msPerFrame = 16
 
-const width int32 = 1100
-const height int32 = 800
+const windowWidth int32 = 1120
+const windowHeight int32 = 1020
 const playerWidth int32 = 20
 const playerHeight int32 = 150
+
+// 10 pixel offset to left and right of walls
+const gameWidth int32 = windowWidth - 20
+
+// 10 pixel offset + 200 on bottom for score
+const gameHeight int32 = windowHeight - 220
 
 type gameObjects struct {
 	Player1 *Player
@@ -59,8 +65,8 @@ func initialize() (*sdl.Window, *sdl.Renderer) {
 	}
 
 	window, renderer, err := sdl.CreateWindowAndRenderer(
-		width,
-		height,
+		windowWidth,
+		windowHeight,
 		sdl.WINDOW_SHOWN,
 	)
 	if err != nil {

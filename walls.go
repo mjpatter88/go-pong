@@ -12,10 +12,10 @@ type Walls struct {
 }
 
 func createWalls() Walls {
-	leftWall := sdl.Rect{X: 10, Y: 10, W: wallWidth, H: height - 20}
-	rightWall := sdl.Rect{X: width - (wallWidth + 10), Y: 10, W: wallWidth, H: height - 20}
-	topWall := sdl.Rect{X: wallWidth + 10, Y: 10, W: width - (2*wallWidth + 2*10), H: 20}
-	bottomWall := sdl.Rect{X: wallWidth + 10, Y: height - 30, W: width - (2*wallWidth + 2*10), H: 20}
+	leftWall := sdl.Rect{X: 10, Y: 10, W: wallWidth, H: gameHeight - 20}
+	rightWall := sdl.Rect{X: gameWidth - 10, Y: 10, W: wallWidth, H: gameHeight - 20}
+	topWall := sdl.Rect{X: wallWidth + 10, Y: 10, W: gameWidth - (2 * wallWidth), H: 20}
+	bottomWall := sdl.Rect{X: wallWidth + 10, Y: gameHeight - 30, W: gameWidth - (2 * wallWidth), H: 20}
 	return Walls{LeftWall: leftWall, RightWall: rightWall, TopWall: topWall, BottomWall: bottomWall}
 }
 

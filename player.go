@@ -10,10 +10,10 @@ const b = 0xFF
 
 const maxPlayerVelocity = 20
 const minPlayerY = 10 + wallWidth
-const maxPlayerY = (height - 30) - playerHeight
+const maxPlayerY = (gameHeight - 30) - playerHeight
 const playerVelocityIncrement = 4
 const playerOffset = 10 + wallWidth + 20
-const playerY = (height / 2) - (playerHeight / 2)
+const playerY = (gameHeight / 2) - (playerHeight / 2)
 
 type Player struct {
 	YVelocity int32
@@ -72,7 +72,7 @@ func CreatePlayer1(renderer *sdl.Renderer) Player {
 }
 
 func CreatePlayer2(renderer *sdl.Renderer) Player {
-	x := width - (playerOffset + playerWidth)
+	x := windowWidth - (playerOffset + playerWidth)
 	y := playerY
 	return CreatePlayer(renderer, x, y, playerWidth, playerHeight)
 }
