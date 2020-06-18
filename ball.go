@@ -26,6 +26,15 @@ func (b *Ball) update() {
 	b.Rect.Y += b.Yvelocity
 }
 
+// Resets the ball to its starting condition.
+// Should be called after creation or after
+// a goal has been scored
+func (b *Ball) reset() {
+	b.Rect = _createStartingRect()
+	b.Xvelocity = startingVelocityX
+	b.Yvelocity = startingVelocityY
+}
+
 func createBall(renderer *sdl.Renderer) Ball {
 	tex, err := renderer.CreateTexture(
 		uint32(sdl.PIXELFORMAT_RGBA32),
@@ -37,7 +46,7 @@ func createBall(renderer *sdl.Renderer) Ball {
 		panic(err)
 	}
 
-	rect := sdl.Rect{X: startingX, Y: startingY, W: ballWidth, H: ballHeight}
+	rect := _createStartingRect()
 
 	// Ignore the pitch for now
 	bytes, _, err := tex.Lock(nil)
@@ -52,6 +61,10 @@ func createBall(renderer *sdl.Renderer) Ball {
 	}
 	tex.Unlock()
 
-	ent := Entity{Rect: &rect, Texture: tex}
+	ent := Entity{Rect: rect, Texture: tex}
 	return Ball{Xvelocity: startingVelocityX, Yvelocity: startingVelocityY, Entity: ent}
+}
+
+func _createStartingRect() *sdl.Rect {
+	return &sdl.Rect{X: startingX, Y: startingY, W: ballWidth, H: ballHeight}
 }

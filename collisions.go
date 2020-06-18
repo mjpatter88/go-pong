@@ -34,5 +34,6 @@ func handleCollisions(objs *gameObjects) {
 	if didCollide(ballEntity.Rect, &objs.Walls.BottomWall) || didCollide(ballEntity.Rect, &objs.Walls.TopWall) {
 		objs.Ball.Yvelocity *= -1
 	}
-	//TODO handle collisions with right and left walls (goals)
+	//TODO detect collision with either side wall (goal)
+	//TODO update the score, etc.
 }
